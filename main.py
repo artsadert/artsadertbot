@@ -1,4 +1,3 @@
-from os import getenv
 import asyncio
 import logging
 import sys
@@ -12,14 +11,17 @@ from aiogram.enums import ParseMode
 
 from modules.buttons import keyboard
 from modules.payment.yoomoney_payment import YoomoneyPay
+from modules.sheets.date_sheet import Sheets
+from modules.getenv_smart import getenv_smart
+from modules.date_check import is_valid_date
 
 
 load_dotenv()
 dp = Dispatcher()
-try:
-    payment = YoomoneyPay(str(getenv("CARD_ID")))
-except ValueError:
-    print("CARD_ID must be in .env")
+payment = YoomoneyPay(getenv_smart("CARD_ID"))
+
+sheets = Sheets(getenv_smart("SPREADSHEET_A2"), getenv_smart("SPREADSHEET_DATES"), "./creds.json")
+
 
 @dp.message(CommandStart())
 async def start_menu(message: Message) -> None:
@@ -38,9 +40,12 @@ async def echo_handler(message: Message) -> None:
             await message.answer_photo(img, "Мемасик")
 
         case "Кнопка 4":
-            pass
+            await message.answer(f"В ячейке 2 находиться: {sheets.get_value()}")
         case _:
-            await message.answer(str(message.text))
+            if is_valid_date(str(message.text)):
+                sheets.next_value(str(message.text))
+            else:
+                await message.answer("Дата введена некорректно")
 
 async def main(TOKEN: str) -> None:
     bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
@@ -49,10 +54,7 @@ async def main(TOKEN: str) -> None:
 
 if __name__ == "__main__":
     # loading token
-    if not(TOKEN := getenv("TOKEN_BOT")):
-        print("TOKEN must be in .env file!!!")
-        quit(1)
-    TOKEN = str(TOKEN)
+    TOKEN = getenv_smart("TOKEN_BOT")
     # run main stream and turn on logging
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
     asyncio.run(main(TOKEN))
