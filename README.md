@@ -12,4 +12,10 @@ source .venv/bin/activate
 pip install -r requirements.txt 
 
 ## Настройка .env
-добавьте TOKEN_BOT в .env
+Добавьте TOKEN_BOT в .env
+Добавьте YOOMONEY_TOKEN в .env
+Добавьте CARD_ID в .env
+Добавьте два SPREADSHEET в .env
+
+## Настройка credentials
+В google api необходимо скачать credentials для корректной работы с google sheets
