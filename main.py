@@ -16,17 +16,19 @@ from modules.getenv_smart import getenv_smart
 from modules.date_check import is_valid_date
 
 
+# Создаем глобальные объекты с которыми можно удобно работать
 load_dotenv()
 dp = Dispatcher()
 payment = YoomoneyPay(getenv_smart("CARD_ID"))
-
 sheets = Sheets(getenv_smart("SPREADSHEET_A2"), getenv_smart("SPREADSHEET_DATES"), "./creds.json")
 
 
+# Приветственное окно
 @dp.message(CommandStart())
 async def start_menu(message: Message) -> None:
     await message.answer("Здравствуй дорогой читатель,\n это телеграм бот, созданный для практики работы с yoomoney и google sheets!", reply_markup=keyboard)
 
+# Основная функция, которая обрабатывает ключевые события
 @dp.message()
 async def echo_handler(message: Message) -> None:
     match message.text:
@@ -42,16 +44,21 @@ async def echo_handler(message: Message) -> None:
         case "Кнопка 4":
             await message.answer(f"В ячейке 2 находиться: {sheets.get_value()}")
         case _:
-            if is_valid_date(str(message.text)):
+            if is_valid_date(message.text):
+                await message.answer("Дата верна")
                 sheets.next_value(str(message.text))
             else:
                 await message.answer("Дата введена некорректно")
 
+# Функция, которая выставляет основные настройки боту
 async def main(TOKEN: str) -> None:
     bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 
     await dp.start_polling(bot)
 
+
+# Условие, которое будет выполнятся, если запускают этот файл
+# Также здесь подгружается токен и выставляется уровень логирования
 if __name__ == "__main__":
     # loading token
     TOKEN = getenv_smart("TOKEN_BOT")
